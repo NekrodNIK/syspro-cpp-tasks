@@ -6,7 +6,6 @@
 #include <utility>
 
 namespace cpp_utils {
-
 template <typename T>
   requires std::totally_ordered<T>
 class AvlTreeSet {
@@ -83,10 +82,10 @@ class AvlTreeSet {
     node->updateHeight();
   }
 
-  void updateAncestors(Node* child) {    
+  void updateAncestors(Node* child) {
     auto cur = child->parent;
-    
-    while (auto next = cur->parent) {      
+
+    while (auto next = cur->parent) {
       balanceTree(next->left.get() == cur ? next->left : next->right);
       cur = next;
     }
@@ -108,7 +107,7 @@ public:
         node = node->right.get();
         while (node->left) {
           node = node->left.get();
-        }        
+        }
       } else {
         auto parent = node->parent;
         while (node == parent->right) {
@@ -132,11 +131,11 @@ public:
           parent = parent->parent;
         }
 
-        if (parent) 
+        if (parent)
           node = parent;
       }
     }
-    
+
     iterator(Node* node) { this->node = node; }
     friend class AvlTreeSet<T>;
 
@@ -223,7 +222,7 @@ public:
     } else {
       setRight(prev, std::move(new_node));
     }
-      
+
     updateAncestors(prev);
     updateLeftmost();
   }
