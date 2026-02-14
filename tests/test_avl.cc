@@ -65,7 +65,7 @@ TEST(AvlTreeSetSuite, IteratorDecTest) {
   auto it = set.end();
   EXPECT_EQ(*(--it), 43);
   EXPECT_EQ(*(--it), 42);
-  EXPECT_EQ(*it, 41);
+  EXPECT_EQ(*(--it), 41);
   EXPECT_EQ(it, set.begin());
 }
 
@@ -88,11 +88,11 @@ TEST(AvlTreeSetSuite, RemoveLastTest) {
 
 TEST(AvlTreeSetSuite, UpperBoundTest) {
   AvlTreeSet<int> set;
-  set.insert(140);
+  set.insert(10);
   set.insert(20);
 
-  EXPECT_EQ(*set.upperBound(142), 240);
-  EXPECT_EQ(set.upperBound(242), set.end());
+  EXPECT_EQ(*set.upperBound(15), 20);
+  EXPECT_EQ(set.upperBound(30), set.end());
 }
 
 TEST(AvlTreeSetSuite, StringsTest) {
