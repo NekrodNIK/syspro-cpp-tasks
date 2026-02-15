@@ -1,118 +1,128 @@
 #pragma once
-#include <algorithm>
 #include <cassert>
+#include <compare>
 #include <concepts>
+#include <csignal>
+#include <functional>
 #include <memory>
-#include <utility>
 
 namespace cpp_utils {
-template <typename T>
-  requires std::totally_ordered<T>
+template <typename T> requires std::totally_ordered<T>
 class AvlTreeSet {
   struct Node {
     T value;
-    int height;
+    int size = 1;
+    int height = 1;
 
-    std::unique_ptr<Node> left;
-    std::unique_ptr<Node> right;
-    Node* parent;
+    std::shared_ptr<Node> left;
+    std::shared_ptr<Node> right;
+    std::weak_ptr<Node> parent;
 
-    Node() {};
-    Node(T value) : value(value), height(1) {};
-
-    int lh() { return this->left ? this->left->height : 0; }
-    int rh() { return this->right ? this->right->height : 0; }
-    void updateHeight() { this->height = std::max(this->lh(), this->rh()) + 1; }
-    int balance() { return this->rh() - this->lh(); }
+    int rs() { return right ? right->size : 0; }
+    int ls() { return left ? left->size : 0; }
+    int rh() { return right ? right->height : 0; }
+    int lh() { return left ? left->height : 0; }
+    void recalc() {
+      size = rs() + ls() + 1;
+      height = std::max(rh(), lh()) + 1;
+    }
+    int getBalance() { return rh() - lh(); }
   };
 
-  std::unique_ptr<Node> header = std::make_unique<Node>();
-  std::unique_ptr<Node>& root = header->left;
-  Node* leftmost = header.get();
-
-  void setLeft(Node& node, std::unique_ptr<Node> new_left) {
-    node.left = std::move(new_left);
-    if (node.left)
-      node.left->parent = &node;
-    node.updateHeight();
-  }
-
-  void setRight(Node& node, std::unique_ptr<Node> new_right) {
-    node.right = std::move(new_right);
-    if (node.right)
-      node.right->parent = &node;
-    node.updateHeight();
-  }
-
-  void rotateL(std::unique_ptr<Node>& node) {
-    assert(node && node->right);
-
-    auto pivot = std::move(node->right);
-    setRight(*node, std::move(pivot->left));
-    setLeft(*pivot, std::move(node));
-
-    node = std::move(pivot);
-  }
-
-  void rotateR(std::unique_ptr<Node>& node) {
-    assert(node && node->left);
-
-    auto pivot = std::move(node->left);
-    setLeft(*node, std::move(pivot->right));
-    setRight(*pivot, std::move(node));
-
-    node = std::move(pivot);
-  }
-
-  void balanceTree(std::unique_ptr<Node>& node) {
-    switch (node->balance()) {
-    case 2:
-      if (node->right->balance() == -1) {
-        rotateR(node->right);
-      }
-      rotateL(node);
-      break;
-    case -2:
-      if (node->left->balance() == 1) {
-        rotateL(node->left);
-      }
-      rotateR(node);
-      break;
+  static void setLeft(std::shared_ptr<Node> parent,
+                      std::shared_ptr<Node> left) {
+    if (left) {
+      left->parent = parent;
     }
-    node->updateHeight();
+    parent->left = left;
+    parent->recalc();
   }
 
-  void updateAncestors(Node* child) {
-    auto cur = child->parent;
+  static void setRight(std::shared_ptr<Node> parent,
+                       std::shared_ptr<Node> right) {
+    if (right) {
+      right->parent = parent;
+    }
+    parent->right = right;
+    parent->recalc();
+  }
 
-    while (auto next = cur->parent) {
-      balanceTree(next->left.get() == cur ? next->left : next->right);
-      cur = next;
+  std::shared_ptr<Node> header = std::make_shared<Node>();
+  std::shared_ptr<Node>& bst_root = header->left;
+  std::shared_ptr<Node> leftmost = header;
+
+  std::shared_ptr<Node> rotateL(std::shared_ptr<Node> root) {
+    assert(root && root->right);
+    auto pivot = root->right;
+
+    setRight(root, pivot->left);
+    setLeft(pivot, root);
+
+    return pivot;
+  }
+
+  std::shared_ptr<Node> rotateR(std::shared_ptr<Node> root) {
+    assert(root && root->left);
+    auto pivot = root->left;
+
+    setLeft(root, pivot->right);
+    setRight(pivot, root);
+
+    return pivot;
+  }
+
+  std::shared_ptr<Node> balanceTree(std::shared_ptr<Node> root) {
+    if (root->getBalance() == 2) {
+      if (root->right->getBalance() == -1) {
+        setRight(root, rotateR(root->right));
+      }
+      root = rotateL(root);
+    } else if (root->getBalance() == -2) {
+      if (root->left->getBalance() == 1) {
+        setLeft(root, rotateL(root->left));
+      }
+      root = rotateR(root);
+    }
+
+    return root;
+  }
+
+  void updateAncestors(std::shared_ptr<Node> start) {
+    auto cur = start;
+    cur->recalc();
+
+    while (auto parent = cur->parent.lock()) {
+      auto& ref = (parent->left == cur) ? parent->left : parent->right;
+      ref = balanceTree(cur);
+      ref->parent = parent;
+
+      cur = parent;
     }
   }
 
   void updateLeftmost() {
-    leftmost = header.get();
+    leftmost = header;
     while (leftmost->left) {
-      leftmost = leftmost->left.get();
+      leftmost = leftmost->left;
     }
   }
 
 public:
   class iterator {
-    Node* node;
+    friend class AvlTree;
+    std::shared_ptr<Node> node;
 
     void next() {
       if (node->right) {
-        node = node->right.get();
+        node = node->right;
         while (node->left) {
-          node = node->left.get();
+          node = node->left;
         }
       } else {
-        auto parent = node->parent;
+        auto parent = node->parent.lock();
         while (node == parent->right) {
           node = parent;
-          parent = parent->parent;
+          parent = parent->parent.lock();
         }
         node = parent;
       }
@@ -120,27 +130,29 @@ public:
 
     void prev() {
       if (node->left) {
-        node = node->left.get();
+        node = node->left;
         while (node->right) {
-          node = node->right.get();
+          node = node->right;
         }
       } else {
-        auto parent = node->parent;
+        auto parent = node->parent.lock();
         while (parent && node == parent->left) {
           node = parent;
-          parent = parent->parent;
+          parent = parent->parent.lock();
         }
 
-        if (parent)
+        if (parent) {
           node = parent;
+        }
       }
     }
 
-    iterator(Node* node) { this->node = node; }
-    friend class AvlTreeSet<T>;
+    friend AvlTreeSet<T>;
 
   public:
-    bool operator==(iterator other) { return node == other.node; }
+    iterator(std::shared_ptr<Node> node) { this->node = node; }
+    bool operator==(iterator other) const { return node == other.node; }
+    bool operator!=(iterator other) const { return node != other.node; }
     T& operator*() { return node->value; }
     T* operator->() { return &node->value; }
 
@@ -167,22 +179,35 @@ public:
     }
   };
 
-  AvlTreeSet() {};
-  AvlTreeSet(const AvlTreeSet&) = delete;
-  AvlTreeSet& operator=(const AvlTreeSet&) = delete;
+  int rank(const iterator& it) {
+    if (it == end())
+      return 0;
+    auto node = it.node;
 
-  AvlTreeSet(AvlTreeSet&&) = default;
-  AvlTreeSet& operator=(AvlTreeSet&&) = default;
+    int rank = node->rs();
+    auto cur = node;
+
+    std::shared_ptr<Node> parent;
+    while ((parent = cur->parent.lock()) != header) {
+      if (cur == parent->left) {
+        rank += parent->rs() + 1;
+      }
+      cur = parent;
+    }
+
+    return rank;
+  }
 
   iterator begin() { return iterator(leftmost); };
-  iterator end() { return iterator(header.get()); }
+  iterator end() { return iterator(header); }
 
   iterator find(T value) {
-    auto ptr = root;
+    auto ptr = bst_root;
     while (ptr) {
-      if (ptr->value == value) {
+      auto comp_result = ptr->value <=> value;
+      if (comp_result == 0) {
         return iterator(ptr);
-      } else if (ptr->value < value) {
+      } else if (comp_result < 0) {
         ptr = ptr->right;
       } else {
         ptr = ptr->left;
@@ -195,9 +220,10 @@ public:
   iterator upperBound(const T& value) {
     auto result = header;
 
-    auto ptr = root;
+    auto ptr = bst_root;
     while (ptr) {
-      if (ptr->value <= value) {
+      auto comp_result = ptr->value <=> value;
+      if (comp_result <= 0) {
         ptr = ptr->right;
       } else {
         result = ptr;
@@ -208,33 +234,34 @@ public:
     return iterator(result);
   }
 
-  void insert(T value) {
-    auto new_node = std::make_unique<Node>(value);
+  iterator insert(T value) {
+    auto new_node = std::make_shared<Node>(value);
 
     if (begin() == end()) {
-      root = std::move(new_node);
-      root->parent = header.get();
+      bst_root = new_node;
+      bst_root->parent = header;
       updateLeftmost();
-      return;
+      return iterator(new_node);
     }
 
-    Node* prev;
-    Node* cur = root.get();
+    std::shared_ptr<Node> prev;
+    auto cur = bst_root;
     while (cur) {
       prev = cur;
-      cur = ((value < cur->value) ? cur->left : cur->right).get();
+      cur = (value < cur->value) ? cur->left : cur->right;
     }
 
     if (value == prev->value) {
-      return;
-    } else if (value < prev->value) {
-      setLeft(*prev, std::move(new_node));
-    } else {
-      setRight(*prev, std::move(new_node));
+      return iterator(prev);
     }
+
+    auto& ref = (value < prev->value) ? prev->left : prev->right;
+    ref = new_node;
+    new_node->parent = prev;
 
     updateAncestors(prev);
     updateLeftmost();
+    return iterator(new_node);
   }
 
   void remove(const iterator& iter) {
@@ -243,20 +270,20 @@ public:
     }
 
     auto rm = iter.node;
-    std::unique_ptr<Node> replacement;
+    std::shared_ptr<Node> replacement;
 
     if (rm->left && rm->right) {
-      auto succ = rm->right.get();
+      auto succ = rm->right;
       auto parent = rm;
 
       while (succ->left) {
         parent = succ;
-        succ = succ->left.get();
+        succ = succ->left;
       }
 
       if (parent != rm) {
-        setRight(succ, std::move(rm->right));
-        setLeft(parent, std::move(succ->right));
+        setLeft(parent, succ->right);
+        setRight(succ, rm->right);
       }
 
       setLeft(succ, rm->left);
@@ -265,15 +292,15 @@ public:
       replacement = rm->left ? rm->left : rm->right;
     }
 
-    auto parent = rm->parent;
-    if (parent->left == rm) {
-      setLeft(parent, replacement);
-    } else {
-      setRight(parent, replacement);
+    auto parent = rm->parent.lock();
+    auto& ref = (parent->left == rm) ? parent->left : parent->right;
+    ref = replacement;
+    if (ref) {
+      ref->parent = parent;
     }
 
     updateAncestors(parent);
     updateLeftmost();
   }
 };
-} // namespace cpp_utils
+}
