@@ -1,27 +1,27 @@
 #include "../src/avl.hpp"
 #include <gtest/gtest.h>
 
-using cpp_utils::AvlTreeSet;
+using cpp_utils::AvlOrderedSet;
 
-TEST(AvlTreeSetSuite, EmptySetTest) {
-  AvlTreeSet<int> set;
+TEST(AvlOrderedSetSuite, EmptySetTest) {
+  AvlOrderedSet<int> set;
   EXPECT_EQ(set.begin(), set.end());
 }
 
-TEST(AvlTreeSetSuite, InsertTest) {
-  AvlTreeSet<int> set;
+TEST(AvlOrderedSetSuite, InsertTest) {
+  AvlOrderedSet<int> set;
   set.insert(42);
   EXPECT_NE(set.find(42), set.end());
 }
 
-TEST(AvlTreeSetSuite, NotFoundTest) {
-  AvlTreeSet<int> set;
+TEST(AvlOrderedSetSuite, NotFoundTest) {
+  AvlOrderedSet<int> set;
   set.insert(42);
   EXPECT_EQ(set.find(43), set.end());
 }
 
-TEST(AvlTreeSetSuite, InsertMultipleTest) {
-  AvlTreeSet<int> set;
+TEST(AvlOrderedSetSuite, InsertMultipleTest) {
+  AvlOrderedSet<int> set;
 
   set.insert(42);
   set.insert(43);
@@ -32,8 +32,8 @@ TEST(AvlTreeSetSuite, InsertMultipleTest) {
   EXPECT_NE(set.find(44), set.end());
 }
 
-TEST(AvlTreeSetSuite, InsertDuplicateTest) {
-  AvlTreeSet<int> set;
+TEST(AvlOrderedSetSuite, InsertDuplicateTest) {
+  AvlOrderedSet<int> set;
   set.insert(42);
   set.insert(42);
 
@@ -43,8 +43,8 @@ TEST(AvlTreeSetSuite, InsertDuplicateTest) {
   EXPECT_EQ(cnt, 1);
 }
 
-TEST(AvlTreeSetSuite, IteratorIncTest) {
-  AvlTreeSet<int> set;
+TEST(AvlOrderedSetSuite, IteratorIncTest) {
+  AvlOrderedSet<int> set;
   set.insert(42);
   set.insert(41);
   set.insert(43);
@@ -56,8 +56,8 @@ TEST(AvlTreeSetSuite, IteratorIncTest) {
   EXPECT_EQ(it, set.end());
 }
 
-TEST(AvlTreeSetSuite, IteratorDecTest) {
-  AvlTreeSet<int> set;
+TEST(AvlOrderedSetSuite, IteratorDecTest) {
+  AvlOrderedSet<int> set;
   set.insert(43);
   set.insert(41);
   set.insert(42);
@@ -69,38 +69,37 @@ TEST(AvlTreeSetSuite, IteratorDecTest) {
   EXPECT_EQ(it, set.begin());
 }
 
-TEST(AvlTreeSetSuite, RemoveTest) {
-  AvlTreeSet<int> set;
+TEST(AvlOrderedSetSuite, RemoveTest) {
+  AvlOrderedSet<int> set;
   set.insert(42);
   set.insert(43);
 
-  set.remove(set.find(42));
+  set.remove(42);
   EXPECT_EQ(set.find(42), set.end());
   EXPECT_NE(set.find(43), set.end());
 }
 
-TEST(AvlTreeSetSuite, RemoveLastTest) {
-  AvlTreeSet<int> set;
+TEST(AvlOrderedSetSuite, RemoveLastTest) {
+  AvlOrderedSet<int> set;
   set.insert(42);
-  set.remove(set.find(42));
+  set.remove(42);
   EXPECT_EQ(set.begin(), set.end());
 }
 
-TEST(AvlTreeSetSuite, UpperBoundTest) {
-  AvlTreeSet<int> set;
+TEST(AvlOrderedSetSuite, UpperBoundTest) {
+  AvlOrderedSet<int> set;
   set.insert(10);
   set.insert(20);
 
-  EXPECT_EQ(*set.upperBound(15), 20);
-  EXPECT_EQ(set.upperBound(30), set.end());
+  EXPECT_EQ(*set.upper_bound(15), 20);
+  EXPECT_EQ(set.upper_bound(30), set.end());
 }
 
-TEST(AvlTreeSetSuite, StringsTest) {
-  AvlTreeSet<std::string> set;
+TEST(AvlOrderedSetSuite, StringsTest) {
+  AvlOrderedSet<std::string> set;
   set.insert("DON'T");
   set.insert("PANIC");
 
   EXPECT_EQ(*set.begin(), "DON'T");
   EXPECT_NE(set.find("PANIC"), set.end());
 }
-
