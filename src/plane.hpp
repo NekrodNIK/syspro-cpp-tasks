@@ -39,6 +39,7 @@ struct Line {
   }
   Line(const Point& start, const Vector& direction)
       : start(start), direction(direction) {};
+
   std::optional<Point> intersection(const Line& other) const {
     if (direction.isCollinear(other.direction)) 
       return std::nullopt;
