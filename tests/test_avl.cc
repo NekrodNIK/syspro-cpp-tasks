@@ -1,7 +1,7 @@
 #include "../src/avl.hpp"
 #include <gtest/gtest.h>
 
-using cpp_utils::AvlOrderedSet;
+using lib::AvlOrderedSet;
 
 TEST(AvlOrderedSetSuite, EmptySetTest) {
   AvlOrderedSet<int> set;

@@ -1,10 +1,8 @@
 #include <algorithm>
-#include <concepts>
 #include <memory>
 #include <utility>
 
-namespace cpp_utils {
-
+namespace lib {
 template <typename T>
 struct AvlNode {
   T value;
@@ -295,4 +293,4 @@ void AvlOrderedSet<T>::remove(const T& value) {
   }
   update_leftmost_();
 }
-} // namespace cpp_utils
+} // namespace lib
