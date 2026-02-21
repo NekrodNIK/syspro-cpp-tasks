@@ -1,4 +1,5 @@
 #include "../src/avl.hpp"
+#include "gtest/gtest.h"
 #include <gtest/gtest.h>
 
 using lib::AvlOrderedSet;
@@ -103,3 +104,39 @@ TEST(AvlOrderedSetSuite, StringsTest) {
   EXPECT_EQ(*set.begin(), "DON'T");
   EXPECT_NE(set.find("PANIC"), set.end());
 }
+
+TEST(AvlOrderedSetSuite, CopyTest) {
+  AvlOrderedSet<int> src;
+  src.insert(42);
+  src.insert(43);
+  src.insert(44);
+  auto copy = AvlOrderedSet<int>(src);
+  copy.insert(45);
+
+  EXPECT_NE(src.find(42), src.end());  
+  EXPECT_NE(copy.find(42), copy.end());  
+  EXPECT_NE(src.find(43), src.end());  
+  EXPECT_NE(copy.find(43), copy.end());  
+  EXPECT_NE(src.find(44), src.end());  
+  EXPECT_NE(copy.find(44), copy.end());  
+  
+  EXPECT_EQ(src.find(45), src.end());  
+  EXPECT_NE(copy.find(45), copy.end());  
+}
+
+TEST(AvlOrderedSetSuite, MoveTest) {
+  AvlOrderedSet<int> src;
+  src.insert(42);
+  src.insert(43);
+  src.insert(44);
+
+  AvlOrderedSet<int> dest = std::move(src);
+  EXPECT_EQ(src.find(42), src.end());  
+  EXPECT_EQ(src.find(43), src.end());  
+  EXPECT_EQ(src.find(44), src.end());  
+  
+  EXPECT_NE(dest.find(42), dest.end());  
+  EXPECT_NE(dest.find(43), dest.end());  
+  EXPECT_NE(dest.find(44), dest.end());  
+}
+

@@ -18,7 +18,7 @@ struct AvlNode {
   AvlNode() : left(nullptr) {};
   AvlNode(AvlNode&&) = default;
   AvlNode& operator=(AvlNode&&) = default;
-  
+
   int get_balance() const;
   void update_height();
 
@@ -192,30 +192,39 @@ AvlOrderedSet<T>::AvlOrderedSet(const AvlOrderedSet<T>& other) {
 
 template <std::totally_ordered T>
 AvlOrderedSet<T>& AvlOrderedSet<T>::operator=(const AvlOrderedSet<T>& other) {
-  auto deep_copy = [](auto&& self, const AvlNode<T>& node) -> AvlNode<T> {
-    auto copy = AvlNode<T>{};
-    copy.value = node.value;
-    copy.height = node.height;
-    copy.left = std::make_unique(self(node.left));
-    copy.right = std::make_unique(self(node.right));
-    copy.left->parent = copy;
-    copy.right->parent = copy;
+  auto deep_copy = [](this const auto& self,
+                      const AvlNode<T>* node) -> std::unique_ptr<AvlNode<T>> {
+    if (!node)
+      return nullptr;
+    auto copy = std::make_unique<AvlNode<T>>();
+
+    copy->value = node->value;
+    copy->height = node->height;
+    copy->left = self(node->left.get());
+    copy->right = self(node->right.get());
+    if (copy->left)
+      copy->left->parent = copy.get();
+    if (copy->right)
+      copy->right->parent = copy.get();
     return copy;
   };
-  header_ = std::make_unique(deep_copy(other.header_));
+  header_ = deep_copy(other.header_.get());
   leftmost_ = header_.get();
+  return *this;
 }
 
 template <std::totally_ordered T>
 AvlOrderedSet<T>::AvlOrderedSet(AvlOrderedSet<T>&& other) {
-  *this = other;
+  *this = std::move(other);
 }
 
 template <std::totally_ordered T>
 AvlOrderedSet<T>& AvlOrderedSet<T>::operator=(AvlOrderedSet<T>&& other) {
   header_ = std::move(other.header_);
+  other.header_ = std::make_unique<AvlNode<T>>();
   leftmost_ = other.leftmost_;
-  other.leftmost_ = other.header_.get(); 
+  other.leftmost_ = other.header_.get();
+  return *this;
 }
 
 template <std::totally_ordered T>
