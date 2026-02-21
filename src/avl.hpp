@@ -222,7 +222,7 @@ template <std::totally_ordered T>
 AvlOrderedSet<T>& AvlOrderedSet<T>::operator=(AvlOrderedSet<T>&& other) {
   header_ = std::move(other.header_);
   other.header_ = std::make_unique<AvlNode<T>>();
-  leftmost_ = other.leftmost_;
+  leftmost_ = header_.get();
   other.leftmost_ = other.header_.get();
   return *this;
 }
