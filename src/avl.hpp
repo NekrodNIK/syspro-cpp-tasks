@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <concepts>
 #include <memory>
 #include <utility>
 
@@ -15,7 +16,9 @@ struct AvlNode {
       : value(value), height(1), left(nullptr), right(nullptr),
         parent(nullptr) {}
   AvlNode() : left(nullptr) {};
-
+  AvlNode(AvlNode&&) = default;
+  AvlNode& operator=(AvlNode&&) = default;
+  
   int get_balance() const;
   void update_height();
 
@@ -29,9 +32,8 @@ struct AvlNode {
 
 template <std::totally_ordered T>
 class AvlOrderedSet {
-  std::unique_ptr<AvlNode<T>> header_ = std::make_unique<AvlNode<T>>();
-  std::unique_ptr<AvlNode<T>>& root_ = header_->left;
-  AvlNode<T>* leftmost_ = header_.get();
+  std::unique_ptr<AvlNode<T>> header_;
+  AvlNode<T>* leftmost_;
 
   void balance_ancestors_(AvlNode<T>&);
   void update_leftmost_();
@@ -64,7 +66,11 @@ public:
     };
   };
 
-  AvlOrderedSet() = default;
+  AvlOrderedSet();
+  AvlOrderedSet(const AvlOrderedSet&);
+  AvlOrderedSet& operator=(const AvlOrderedSet&);
+  AvlOrderedSet(AvlOrderedSet&&);
+  AvlOrderedSet& operator=(AvlOrderedSet&&);
 
   iterator begin() const { return iterator(leftmost_); };
   iterator end() const { return iterator(header_.get()); };
@@ -174,8 +180,47 @@ AvlOrderedSet<T>::iterator& AvlOrderedSet<T>::iterator::operator--() {
 }
 
 template <std::totally_ordered T>
+AvlOrderedSet<T>::AvlOrderedSet() {
+  this->header_ = std::make_unique<AvlNode<T>>();
+  this->leftmost_ = this->header_.get();
+}
+
+template <std::totally_ordered T>
+AvlOrderedSet<T>::AvlOrderedSet(const AvlOrderedSet<T>& other) {
+  *this = other;
+}
+
+template <std::totally_ordered T>
+AvlOrderedSet<T>& AvlOrderedSet<T>::operator=(const AvlOrderedSet<T>& other) {
+  auto deep_copy = [](auto&& self, const AvlNode<T>& node) -> AvlNode<T> {
+    auto copy = AvlNode<T>{};
+    copy.value = node.value;
+    copy.height = node.height;
+    copy.left = std::make_unique(self(node.left));
+    copy.right = std::make_unique(self(node.right));
+    copy.left->parent = copy;
+    copy.right->parent = copy;
+    return copy;
+  };
+  header_ = std::make_unique(deep_copy(other.header_));
+  leftmost_ = header_.get();
+}
+
+template <std::totally_ordered T>
+AvlOrderedSet<T>::AvlOrderedSet(AvlOrderedSet<T>&& other) {
+  *this = other;
+}
+
+template <std::totally_ordered T>
+AvlOrderedSet<T>& AvlOrderedSet<T>::operator=(AvlOrderedSet<T>&& other) {
+  header_ = std::move(other.header_);
+  leftmost_ = other.leftmost_;
+  other.leftmost_ = other.header_.get(); 
+}
+
+template <std::totally_ordered T>
 AvlOrderedSet<T>::iterator AvlOrderedSet<T>::find(const T& value) const {
-  AvlNode<T>* current = root_.get();
+  AvlNode<T>* current = header_->left.get();
   while (current) {
     if (current->value == value) {
       return iterator(current);
@@ -192,7 +237,7 @@ template <std::totally_ordered T>
 AvlOrderedSet<T>::iterator AvlOrderedSet<T>::upper_bound(const T& value) const {
   iterator result = end();
 
-  AvlNode<T>* current = root_.get();
+  AvlNode<T>* current = header_->left.get();
   while (current) {
     if (current->value <= value) {
       current = current->right.get();
@@ -229,7 +274,7 @@ void AvlOrderedSet<T>::update_leftmost_() {
 
 template <std::totally_ordered T>
 void AvlOrderedSet<T>::insert(T value) {
-  std::unique_ptr<AvlNode<T>>* current = &root_;
+  std::unique_ptr<AvlNode<T>>* current = &header_->left;
   AvlNode<T>* parent = header_.get();
 
   while (*current) {
