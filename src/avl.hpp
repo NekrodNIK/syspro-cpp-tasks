@@ -265,7 +265,7 @@ void AvlOrderedSet<T>::balance_ancestors_(AvlNode<T>& node) {
 
   while (current != header_.get()) {
     auto& child =
-        current->left.get() == node.parent ? current->left : current->right;
+        current->left.get() == current ? current->left : current->right;
     child = AvlNode<T>::balance_tree(std::move(child));
     if (child)
       child->parent = current;
