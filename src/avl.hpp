@@ -50,7 +50,9 @@ public:
     bool operator==(const iterator&) const = default;
     bool operator!=(const iterator&) const = default;
     T& operator*() { return node->value; }
+    const T& operator*() const { return node->value; }
     T* operator->() { return &node->value; }
+    const T* operator->() const {return &node->value; }
 
     iterator& operator++();
     iterator operator++(int) {
