@@ -27,8 +27,7 @@ public:
   
   CloningPtr& operator=(const ScopedPtr<T>& other) {
     T* ptr = other.raw ? new T(*other.raw) : nullptr;
-    if (this->raw)
-      delete this->raw;
+    delete this->raw;
     this->raw = ptr;
     return *this;
   }
@@ -46,8 +45,7 @@ public:
   
   UniquePtr& operator=(ScopedPtr<T>&& other) {
     T* ptr = std::exchange(other.raw, nullptr);
-    if (this->raw)
-      delete this->raw;
+    delete this->raw;
     this->raw = ptr;
     return *this;
   }
