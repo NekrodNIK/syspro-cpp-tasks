@@ -15,19 +15,19 @@ public:
 };
 
 template <typename T>
-class CloningScopedPtr : public ScopedPtr<T> {
+class CloningPtr : public ScopedPtr<T> {
 public:
-  CloningScopedPtr& operator=(const ScopedPtr<T>& other) {
+  CloningPtr& operator=(const ScopedPtr<T>& other) {
     T* ptr = other.raw ? new T(*other.raw) : nullptr;
     if (this->raw)
       delete this->raw;
     this->raw = ptr;
     return *this;
   }
-  CloningScopedPtr(const ScopedPtr<T>& other) { this->operator=(other); }
+  CloningPtr(const ScopedPtr<T>& other) { this->operator=(other); }
 
-  CloningScopedPtr(ScopedPtr<T>&& other) = delete;
-  CloningScopedPtr& operator=(ScopedPtr<T>&& other) = delete;
+  CloningPtr(ScopedPtr<T>&& other) = delete;
+  CloningPtr& operator=(ScopedPtr<T>&& other) = delete;
 };
 
 template <typename T>
