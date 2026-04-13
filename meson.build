@@ -8,6 +8,7 @@ tests = [
   'tests/test_avl.cpp',
   'tests/test_plane.cpp',
   'tests/test_matrix.cpp',
+  'tests/test_instance_limiter.cpp',
 ]
 
 gtest_dep = dependency('gtest', main : true)

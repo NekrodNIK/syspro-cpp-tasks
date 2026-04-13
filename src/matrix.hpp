@@ -40,10 +40,10 @@ public:
   T& operator()(int index) { return mem_[index]; }
   const T& operator()(int index) const { return mem_[index]; }
   std::span<T> operator[](int index) {
-    return std::span<T>(mem_).subspan(index * cols_, cols_);
+    return std::span(mem_).subspan(index * cols_, cols_);
   }
   std::span<const T> operator[](int index) const {
-    return std::span<const T>(mem_).subspan(index * cols_, cols_);
+    return std::span(mem_).subspan(index * cols_, cols_);
   }
 
   explicit operator T() const {
@@ -98,6 +98,7 @@ public:
     Matrix result(rows_, rhs.cols_);
     for (int i = 0; i < rows_; i++) {
       for (int j = 0; j < rhs.cols_; j++) {
+        result[i][j] = T{};
         for (int k = 0; k < cols_; k++) {
           result[i][j] += (*this)[i][k] * rhs[k][j];
         }
