@@ -18,7 +18,7 @@ public:
 
   Expected<size_t> read(std::span<std::byte> buf) override {
     if (read_pos_ == data_.size())
-      return Unexpected(Err::UnexpectedEof);
+      return {0};
     size_t n = std::min(buf.size(), data_.size() - read_pos_);
     std::copy_n(reinterpret_cast<std::byte*>(data_.data()) + read_pos_, n,
                 buf.begin());
@@ -66,7 +66,10 @@ public:
     return n;
   }
 
-  Expected<void> flush() override { return {}; }
+  Expected<void> flush() override {
+    std::fflush(file_);
+    return {};
+  }
 };
 
 class FileBufReaderWriter : public BufReaderWriter {

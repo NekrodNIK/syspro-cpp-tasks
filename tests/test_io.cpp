@@ -26,8 +26,8 @@ TEST(StringReaderWriter, ReadEOF) {
   EXPECT_EQ(*r1, 2);
 
   auto r2 = srw.read(buf);
-  ASSERT_FALSE(r2.has_value());
-  EXPECT_EQ(r2.error(), Err::UnexpectedEof);
+  ASSERT_TRUE(r2.has_value());
+  ASSERT_EQ(r2.value(), 0);
 }
 
 TEST(StringBufReaderWriter, BufferedWriteRead) {

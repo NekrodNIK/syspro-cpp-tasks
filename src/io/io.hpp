@@ -8,6 +8,7 @@
 #include <span>
 #include <string>
 #include <string_view>
+#include <system_error>
 #include <type_traits>
 #include <utility>
 
@@ -51,6 +52,8 @@ public:
     operator Expected<void>() { return error; }
     template <typename T>
     OperatorWrapper operator>>(T& dest) {
+      if (!error.has_value())
+        return *this;
       return OperatorWrapper(r.read_into(dest), r);
     }
   };
@@ -65,9 +68,10 @@ class Writer {
 public:
   virtual Expected<size_t> write(std::span<const std::byte> buf) = 0;
   virtual Expected<void> flush() = 0;
-  
+
   virtual ~Writer() = default;
   virtual Expected<void> write_all(std::span<const std::byte> buf);
+
   template <typename... Args>
   std::expected<void, Err> write_fmt(std::format_string<Args...> fmt,
                                      Args&&... args);
@@ -87,6 +91,8 @@ public:
     operator Expected<void>() { return error; }
     template <typename T>
     OperatorWrapper operator<<(T&& src) {
+      if (!error.has_value())
+        return *this;
       return OperatorWrapper(w.write_from(std::forward<T>(src)), w);
     }
   };
@@ -140,7 +146,7 @@ inline Expected<void> Writer::write_all(std::span<const std::byte> buf) {
 template <typename... Args>
 std::expected<void, Err> Writer::write_fmt(std::format_string<Args...> fmt,
                                            Args&&... args) {
-  return write_all(std::format(fmt, std::forward<Args>(args)...));
+  return write_from(std::format(fmt, std::forward<Args>(args)...));
 }
 
 template <>
@@ -201,8 +207,8 @@ public:
 
 template <>
 inline Expected<void> WriteFrom<std::byte>::write_from(Writer& w,
-                                                       const std::byte& dest) {
-  return w.write_all(std::span(&dest, 1));
+                                                       const std::byte& src) {
+  return w.write_all(std::span(&src, 1));
 }
 
 template <typename T>
