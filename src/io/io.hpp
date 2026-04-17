@@ -22,7 +22,6 @@ template <typename T>
 using Expected = std::expected<T, Err>;
 using Unexpected = std::unexpected<Err>;
 
-class IO;
 class Reader;
 class Writer;
 class ReaderWriter;
@@ -31,15 +30,11 @@ class ReadInto;
 template <typename T>
 class WriteFrom;
 
-class IO {
+class Reader {
 public:
-  virtual ~IO() = default;
-};
-
-class Reader : public IO {
-public:
-  virtual ~Reader() = default;
   virtual Expected<size_t> read(std::span<std::byte> buf) = 0;
+
+  virtual ~Reader() = default;
   virtual Expected<void> read_exact(std::span<std::byte> buf);
   template <typename T>
   Expected<void> read_into(T& dest) {
@@ -66,10 +61,12 @@ public:
   };
 };
 
-class Writer : public IO {
+class Writer {
 public:
-  virtual ~Writer() = default;
   virtual Expected<size_t> write(std::span<const std::byte> buf) = 0;
+  virtual Expected<void> flush() = 0;
+  
+  virtual ~Writer() = default;
   virtual Expected<void> write_all(std::span<const std::byte> buf);
   template <typename... Args>
   std::expected<void, Err> write_fmt(std::format_string<Args...> fmt,
