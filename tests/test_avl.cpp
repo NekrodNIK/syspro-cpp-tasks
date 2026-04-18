@@ -1,6 +1,7 @@
 #include "../src/avl.hpp"
 #include "gtest/gtest.h"
 #include <gtest/gtest.h>
+#include <vector>
 
 using lib::AvlOrderedSet;
 
@@ -68,6 +69,22 @@ TEST(AvlOrderedSetSuite, IteratorDecTest) {
   EXPECT_EQ(*(--it), 42);
   EXPECT_EQ(*(--it), 41);
   EXPECT_EQ(it, set.begin());
+}
+
+TEST(AvlOrderedSetSuite, IteratorRangeTest) {
+  AvlOrderedSet<int> set;
+  set.insert(42);
+  set.insert(41);
+  set.insert(43);
+
+  std::vector<int> collected;
+  for (auto item : set) {
+    collected.push_back(item);    
+  }
+
+  EXPECT_EQ(collected[0], 41);
+  EXPECT_EQ(collected[1], 42);
+  EXPECT_EQ(collected[2], 43);
 }
 
 TEST(AvlOrderedSetSuite, RemoveTest) {
