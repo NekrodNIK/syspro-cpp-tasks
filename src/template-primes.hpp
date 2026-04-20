@@ -13,5 +13,7 @@ const bool is_prime<N, M, false, false, false> = true;
 
 template <size_t N, size_t P = 2, size_t Cnt = 0>
 const size_t nth_prime = nth_prime<N, P + 1, Cnt + is_prime<P>>;
+template<>
+inline const size_t nth_prime<0> = 2;
 template <size_t N, size_t P>
 const size_t nth_prime<N, P, N> = P - 1;
