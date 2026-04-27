@@ -10,6 +10,8 @@ tests = [
   'tests/test_matrix.cpp',
   'tests/test_instance_limiter.cpp',
   'tests/test_io.cpp',
+  'tests/test_get_index_of_first_match.cpp',
+  'tests/test_template_allocate.cpp',
 ]
 
 gtest_dep = dependency('gtest', main : true)
