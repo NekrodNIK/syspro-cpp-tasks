@@ -77,7 +77,7 @@ public:
   }
 
   Matrix& operator+=(const Matrix& rhs) {
-    *this = std::move(*this + rhs);
+    *this = *this + rhs;
     return *this;
   }
 
@@ -108,7 +108,7 @@ public:
   }
 
   Matrix& operator*=(const Matrix& rhs) {
-    *this = std::move(*this * rhs);
+    *this = *this * rhs;
     return *this;
   }
 
