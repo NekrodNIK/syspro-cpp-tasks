@@ -41,6 +41,14 @@ TEST(MatrixSuite, Map) {
   EXPECT_DOUBLE_EQ(result[1][1], 420);
 }
 
+TEST(MatrixSuite, MapDifferentType) {
+  Matrix<int> m(42, 1, 3);
+  Matrix<std::string> result = m.map([](auto x) { return std::format("DON'T PANIC! {}", x); });
+  EXPECT_EQ(result[0][0], "DON'T PANIC! 42");
+  EXPECT_EQ(result[0][1], "DON'T PANIC! 42");
+  EXPECT_EQ(result[0][2], "DON'T PANIC! 42");
+}
+
 TEST(MatrixSuite, PlusOperator) {
   Matrix<int> a(1, 2, 3);
   Matrix<int> b(42, 2, 3);
