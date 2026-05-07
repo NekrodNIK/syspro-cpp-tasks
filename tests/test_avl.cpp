@@ -204,3 +204,15 @@ TEST(AvlOrderedSetSuite, MoveAssigmentTest) {
   EXPECT_NE(dest.find(43), dest.end());  
   EXPECT_NE(dest.find(44), dest.end());  
 }
+
+TEST(AvlOrderedSetSuite, InitializerListTest) {
+  AvlOrderedSet set{1, 10, 5, 6, 2, 3, 4};
+  auto it = set.begin();
+  EXPECT_EQ(*(it++), 1);
+  EXPECT_EQ(*(it++), 2);
+  EXPECT_EQ(*(it++), 3);
+  EXPECT_EQ(*(it++), 4);
+  EXPECT_EQ(*(it++), 5);
+  EXPECT_EQ(*(it++), 6);
+  EXPECT_EQ(*(it++), 10);
+}

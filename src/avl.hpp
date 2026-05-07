@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <concepts>
+#include <initializer_list>
 #include <memory>
 #include <utility>
 
@@ -69,6 +70,7 @@ public:
   };
 
   AvlOrderedSet();
+  AvlOrderedSet(std::initializer_list<T>);
   AvlOrderedSet(const AvlOrderedSet&);
   AvlOrderedSet& operator=(const AvlOrderedSet&);
   AvlOrderedSet(AvlOrderedSet&&);
@@ -185,6 +187,12 @@ template <std::totally_ordered T>
 AvlOrderedSet<T>::AvlOrderedSet() {
   this->header_ = std::make_unique<AvlNode<T>>();
   this->leftmost_ = this->header_.get();
+}
+
+template<std::totally_ordered T>
+AvlOrderedSet<T>::AvlOrderedSet(std::initializer_list<T> il) : AvlOrderedSet<T>() {
+  for (auto&& item : il)
+    insert(item);
 }
 
 template <std::totally_ordered T>
